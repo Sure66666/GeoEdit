@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="GeoEdit: Geometric Image Editing via Effects-Sensitive In-Context Inpainting">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoEdit - ICLR 2026</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
+
+  <style>
+    :root {
+      --primary-color: #3273dc;
+      --secondary-bg: #f8f9fa;
+      --text-main: #363636;
+      --text-light: #4a4a4a;
+    }
+
+    body {
+      font-family: 'Google Sans', sans-serif;
+      background-color: #ffffff;
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 3rem 1rem 3rem 1rem;
+      background: #ffffff;
+      text-align: center;
+    }
+
+    /* Logo Bar */
+    .logo-bar img {
+      transition: all 0.3s ease;
+      filter: grayscale(0%);
+      opacity: 1;
+    }
+
+    .logo-bar img:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    .vertical-divider {
+      width: 1px;
+      height: 40px;
+      background-color: #ddd;
+      margin: 0 20px;
+      display: inline-block;
+    }
+
+    .publication-title {
+      font-weight: 700;
+      font-size: 2.8rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #000;
+      letter-spacing: -1px;
+    }
+
+    .conference-tag {
+      font-size: 1.6rem;
+      color: #555;
+      font-weight: 500;
+      margin-bottom: 2rem;
+    }
+
+    .author-block {
+      display: inline-block;
+      margin: 0.5rem 1.2rem;
+      font-size: 1.2rem;
+    }
+
+    .author-block a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .institution {
+      font-size: 1.1rem;
+      color: #777;
+      margin-top: 1rem;
+    }
+
+    .link-block {
+      margin-top: 2rem;
+    }
+
+    .btn-publication {
+      background-color: #363636;
+      color: white !important;
+      border-radius: 25px;
+      padding: 0.6rem 1.8rem;
+      margin: 0.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-publication:hover {
+      background-color: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Section Headers */
+    .section-title {
+      font-weight: 700;
+      margin-bottom: 2rem;
+      text-align: center;
+      font-size: 2.2rem;
+    }
+
+    /* Visualization Grid */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 35px;
+      margin-top: 30px;
+    }
+
+    .image-container {
+      position: relative;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      height: 450px;
+      cursor: pointer;
+      background: #f0f0f0;
+      transition: transform 0.3s ease;
+    }
+
+    .image-container:hover { transform: translateY(-5px); }
+
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    .image-container .alternate {
+      position: absolute;
+      top: 0; left: 0; opacity: 0;
+    }
+
+    .image-container.active .alternate { opacity: 1; }
+    .image-container.active .original { opacity: 0; }
+
+    /* Arrow Styling */
+    .direction-arrow {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .image-container.active .direction-arrow { opacity: 0; }
+
+    .arrow-body {
+      background: #00d1b2;
+      height: 5px;
+      border: 1px solid #000;
+    }
+    .arrow-head {
+      position: absolute;
+      top: 50%; right: -20px;
+      transform: translateY(-50%);
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-left: 20px solid #00d1b2;
+      filter: drop-shadow(1px 0 0 #000) drop-shadow(0 1px 0 #000);
+    }
+
+    /* Dataset/Abstract/Approach Common Styling */
+    .dataset-section, .approach-section {
+      padding: 5rem 0;
+      background-color: var(--secondary-bg);
+    }
+
+    .dataset-card {
+      background: white;
+      border-radius: 20px;
+      padding: 3rem 2rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+      margin-bottom: 4rem;
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .abstract-section {
+      padding: 6rem 1rem;
+      background: #fff;
+    }
+
+    .content-container {
+      max-width: 900px;
+      margin: 0 auto;
+      font-size: 1.1rem;
+      text-align: justify;
+      color: #4a4a4a;
+      line-height: 1.8;
+    }
+
+    /* Approach Figure */
+    .method-figure {
+      width: 100%;
+      max-width: 1000px;
+      margin: 2rem auto;
+      display: block;
+      border-radius: 10px;
+      /* box-shadow: 0 4px 20px rgba(0,0,0,0.05); */
+    }
+
+    footer {
+      background: #1a1a1a;
+      color: #888;
+      padding: 3rem 0;
+      text-align: center;
+    }
+
+    @media (max-width: 992px) {
+      .image-container { height: 350px; }
+    }
+
+    @media (max-width: 768px) {
+      .publication-title { font-size: 2rem; }
+      .image-grid { grid-template-columns: 1fr; }
+      .image-container { height: 300px; }
+      .vertical-divider { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="hero">
+    <div class="container">
+      <div class="logo-bar d-flex justify-content-center align-items-center mb-4" data-aos="fade-down">
+        <a href="https://www.bupt.edu.cn/" target="_blank">
+          <img src="static/images/logos/bupt_logo.jpg" alt="BUPT Logo" style="height: 70px;">
+        </a>
+        <div class="vertical-divider"></div>
+        <a href="#" target="_blank">
+          <img src="static/images/logos/TeleAI_logo.jpg" alt="TeleAI Logo" style="height: 60px;">
+        </a>
+        <div class="vertical-divider"></div>
+        <a href="#" target="_blank">
+          <img src="static/images/logos/bit_logo.png" alt="TeleAI Logo" style="height: 60px;">
+        </a>
+      </div>
+
+      <h1 class="publication-title" data-aos="fade-up">GeoEdit: Geometric Image Editing via Effects-Sensitive In-Context Inpainting</h1>
+      <div class="conference-tag" data-aos="fade-up" data-aos-delay="100">ICLR 2026</div>
+
+      <div class="authors" data-aos="fade-up" data-aos-delay="200">
+        <span class="author-block">Shuo Zhang<sup>1*</sup></span>
+        <span class="author-block">Wenzhuo Wu<sup>1*</sup></span>
+        <span class="author-block">Huayu Zhang<sup>2</sup></span>
+        <span class="author-block">Jiarong Cheng<sup>2,3</sup></span>
+        <span class="author-block">Xianghao Zang<sup>2</sup></span>
+        <span class="author-block">Chao Ban<sup>2</sup></span>
+        <span class="author-block">Hao Sun<sup>2</sup></span>
+        <span class="author-block">Zhongjiang He<sup>2†</sup></span>
+        <span class="author-block">Tianwei Cao<sup>1</sup></span>
+        <span class="author-block">Kongming Liang<sup>1‡</sup></span>
+        <span class="author-block">Zhanyu Ma<sup>1</sup></span>
+      </div>
+
+      <div class="affiliations" style="margin-top: 8px; font-size: 0.95em;">
+        <div><sup>1</sup> PRIS, Beijing University of Posts and Telecommunications</div>
+        <div><sup>2</sup> Institute of Artificial Intelligence (TeleAI), China Telecom</div>
+        <div><sup>3</sup> Beijing Institute of Technology</div>
+      </div>
+
+      <div class="author-notes" style="margin-top: 6px; font-size: 0.95em;">
+        <span><sup>*</sup>Equal contribution.</span>
+        <span style="margin-left: 12px;"><sup>†</sup>Project lead.</span>
+        <span style="margin-left: 12px;"><sup>‡</sup>Corresponding author.</span>
+      </div>
+
+
+
+      <div class="link-block" data-aos="fade-up" data-aos-delay="400">
+        <a href="#" class="btn-publication"><i class="ai ai-arxiv me-2"></i>arXiv</a>
+        <a href="#" class="btn-publication"><i class="fab fa-github me-2"></i>Code</a>
+        <a href="#" class="btn-publication"><i class="fas fa-database me-2"></i>Dataset</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="py-5">
+    <div class="container">
+      <h2 class="section-title" data-aos="fade-up">Visualization Results</h2>
+      <p class="text-center mb-5" style="color: var(--primary-color); font-weight: 500;">Click images to toggle between Source and GeoEdit Result</p>
+      
+      <div class="image-grid" data-aos="fade-up">
+        <div class="image-container">
+          <img class="original" src="static/images/input/input1.png" alt="Source">
+          <img class="alternate" src="static/images/output/output1.png" alt="Target">
+          <div class="direction-arrow" style="top: 80%; left: 30%; transform: rotate(5deg);">
+            <div class="arrow-body" style="width: 80px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/input/input2.png" alt="Source">
+          <img class="alternate" src="static/images/output/output2.png" alt="Target">
+          <div class="direction-arrow" style="top: 62%; left: 42%; transform: rotate(5deg);">
+            <div class="arrow-body" style="width: 80px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_003/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_003/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 60%; left: 31%; transform: rotate(-5deg);">
+            <div class="arrow-body" style="width: 120px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_004/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_004/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 54%; left: 25%; transform: rotate(5deg);">
+            <div class="arrow-body" style="width: 150px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_005/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_005/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 60%; left: 6%; transform: rotate(-12deg);">
+            <div class="arrow-body" style="width: 250px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_006/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_006/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 44%; left: 10%; transform: rotate(-5deg);">
+            <div class="arrow-body" style="width: 235px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_013/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_013/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 60%; left: 43%; transform: rotate(0deg);">
+            <div class="arrow-body" style="width: 45px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_008/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_008/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 50%; left: 33%; transform: rotate(3deg);">
+            <div class="arrow-body" style="width: 110px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_009/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_009/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 52%; left: 26%; transform: rotate(-10deg);">
+            <div class="arrow-body" style="width: 140px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_010/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_010/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 37%; left: 20%; transform: rotate(0deg);">
+            <div class="arrow-body" style="width: 180px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_011/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_011/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 65%; left: 33%; transform: rotate(0deg);">
+            <div class="arrow-body" style="width: 100px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img class="original" src="static/images/real_012/src_input.jpg" alt="Source">
+          <img class="alternate" src="static/images/real_012/tar_input.jpg" alt="Target">
+          <div class="direction-arrow" style="top: 60%; left: 43%; transform: rotate(0deg);">
+            <div class="arrow-body" style="width: 70px;"></div><div class="arrow-head"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dataset-section">
+    <div class="container">
+      <h2 class="section-title" data-aos="fade-up">Large-Scale Geometric Datasets</h2>
+      
+      <div class="dataset-card" data-aos="fade-up">
+        <div class="row align-items-center">
+          <div class="col-lg-12 text-center mb-4">
+            <h3>RS-Objects: High-Fidelity Rendering Dataset</h3>
+            <p class="text-muted">
+                We use Blender to render 24 diverse object-rich scenes with 30 distinct objects. Multiple camera rings are employed under parameterized translation, rotation, and scaling, yielding an extensive Rendered Dataset of 20,000 image pairs.
+            </p>
+          </div>
+          <div class="col-12">
+            <div id="renderCarousel" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-inner">
+                <div class="carousel-item active"><img src="static/images/combined_1_1_Camera_0_0_forward_09_combined.jpg" class="d-block w-100" alt="R1"></div>
+                <div class="carousel-item"><img src="static/images/combined_1_3_Camera_0_7_forward_01_combined.jpg" class="d-block w-100" alt="R2"></div>
+                <div class="carousel-item"><img src="static/images/combined_1_5_Camera_0_8_forward_01_combined.jpg" class="d-block w-100" alt="R3"></div>
+              </div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#renderCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+              <button class="carousel-control-next" type="button" data-bs-target="#renderCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dataset-card" data-aos="fade-up">
+        <div class="row align-items-center">
+          <div class="col-lg-12 text-center mb-4">
+            <h3>Real-World Synthetic Dataset</h3>
+            <p class="text-muted">
+                基于 AnyInsertion 技术构建的 120,000+ 高质量图像对，覆盖了从简单平移到复杂多维旋转的各类场景，显著增强了模型对光影逻辑的处理能力。
+            </p>
+          </div>
+          <div class="col-12">
+            <div id="synthCarousel" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-inner">
+                <div class="carousel-item active"><img src="static/images/1_combined.jpg" class="d-block w-100" alt="S1"></div>
+                <div class="carousel-item"><img src="static/images/2_combined.jpg" class="d-block w-100" alt="S2"></div>
+                <div class="carousel-item"><img src="static/images/3_combined.jpg" class="d-block w-100" alt="S3"></div>
+              </div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#synthCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+              <button class="carousel-control-next" type="button" data-bs-target="#synthCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="abstract-section">
+    <div class="container">
+      <h2 class="section-title" data-aos="fade-up">Abstract</h2>
+      <div class="content-container" data-aos="fade-up">
+        <p>Recent advances in diffusion models have significantly improved image editing. However, challenges persist in handling geometric transformations, such as translation, rotation, and scaling, particularly in complex scenes. Existing approaches suffer from two main limitations: (1) difficulty in achieving accurate geometric editing of object translation, rotation, and scaling; (2) inadequate modeling of intricate lighting and shadow effects, leading to unrealistic results.</p>
+        <p>To address these issues, we propose <strong>GeoEdit</strong>, a framework that leverages in-context generation through a diffusion transformer module, which integrates geometric transformations for precise object edits. Moreover, we introduce <strong>Effects-Sensitive Attention</strong>, which enhances the modeling of intricate lighting and shadow effects for improved realism. To further support training, we construct <strong>RS-Objects</strong>, a large-scale geometric editing dataset containing over 120,000 high-quality image pairs, enabling the model to learn precise geometric editing while generating realistic lighting and shadows. Extensive experiments on public benchmarks demonstrate that GeoEdit consistently outperforms state-of-the-art methods in terms of visual quality, geometric accuracy, and realism.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="approach-section">
+    <div class="container">
+      <h2 class="section-title" data-aos="fade-up">Approach</h2>
+      <div class="content-container" data-aos="fade-up">
+        <img src="static/images/framework.png" alt="GeoEdit Framework" class="method-figure">
+        
+        <p>Our goal is to achieve precise geometric editing while generating realistic lighting and shadow effects. To this end, we propose <strong>GeoEdit</strong>, a diffusion-based framework for geometric image editing. Given an input image and a source mask, our <strong>Geometric Transformation</strong> modul applies translation, rotation, and scaling to produce a target mask and an appearance reference (transformed object) for in-context guidance. These inputs, together with the original image, are processed by the <strong>Diffusion Transformer</strong> module, where paired masks explicitly constrain content generation and the <strong>Effects-Sensitive Attention (ESA)</strong> mechanism adaptively captures lighting and shadow effects to produce realistic editing results. The resulting representations are then decoded to produce the final edited image.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 GeoEdit Project Team. All Rights Reserved.</p>
+      <p style="font-size: 0.8rem; opacity: 0.5;">PRIS Laboratory, Beijing University of Posts and Telecommunications</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      AOS.init({ duration: 1000, once: true });
+      const containers = document.querySelectorAll('.image-container');
+      containers.forEach(container => {
+        container.addEventListener('click', function() {
+          this.classList.toggle('active');
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>
