@@ -1,7 +1,7 @@
 # 🗝 GeoEdit
 
 [![Project Page](https://img.shields.io/badge/Project-Page-green.svg)](https://sure66666.github.io/GeoEdit/)
-[![arXiv](https://img.shields.io/badge/arXiv-2501.07397-b31b1b.svg)]()
+[![arXiv](https://img.shields.io/badge/arXiv-2602.08388-b31b1b.svg)](https://arxiv.org/abs/2602.08388)
 
 <!-- <p align = "center">
 <img  src="static\images\logo_transparent.png" width="150" />
